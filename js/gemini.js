@@ -1,15 +1,33 @@
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+const MODELS = [
+  'gemini-2.0-flash',
+  'gemini-1.5-flash',
+];
 
-async function fetchWithRetry(url, options, maxRetries = 3) {
-  for (let i = 0; i < maxRetries; i++) {
-    const response = await fetch(url, options);
-    if (response.status === 429 && i < maxRetries - 1) {
-      // Wait 2s, 4s, then 8s between retries
-      await new Promise(r => setTimeout(r, 2000 * Math.pow(2, i)));
-      continue;
+async function callWithFallback(apiKey, requestBody) {
+  for (const model of MODELS) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      let response;
+      try {
+        response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody)
+        });
+      } catch {
+        throw new Error('NETWORK_ERROR');
+      }
+      if (response.status === 429 && attempt < 2) {
+        await new Promise(r => setTimeout(r, 3000 * (attempt + 1)));
+        continue;
+      }
+      if (response.status === 404 || response.status === 400) {
+        break; // Model not available, try next model
+      }
+      return response;
     }
-    return response;
   }
+  throw new Error('RATE_LIMITED');
 }
 
 export async function analyzeFood(base64Image, mimeType, apiKey) {
@@ -45,16 +63,7 @@ If you cannot identify food in the image, return:
     }]
   };
 
-  let response;
-  try {
-    response = await fetchWithRetry(`${GEMINI_API_URL}?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody)
-    });
-  } catch {
-    throw new Error('NETWORK_ERROR');
-  }
+  const response = await callWithFallback(apiKey, requestBody);
 
   if (!response.ok) {
     if (response.status === 400 || response.status === 403) throw new Error('INVALID_API_KEY');
