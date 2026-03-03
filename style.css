@@ -1,0 +1,943 @@
+/* ============================================
+   MACRO TRACKER - Mobile-First CSS
+   Base: 375px (iPhone SE)
+   ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: #f5f7fa;
+    min-height: 100vh;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent iOS zoom on input focus */
+input, select, textarea {
+    font-size: 16px;
+}
+
+button {
+    font-family: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+
+.header {
+    background: linear-gradient(135deg, #0066CC 0%, #0099FF 100%);
+    color: white;
+    padding: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.header h1 {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.date-picker {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,0.2);
+    padding: 8px 16px;
+    border-radius: 20px;
+}
+
+.date-picker button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    padding: 4px 8px;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.date-picker button:active {
+    background: rgba(255,255,255,0.2);
+}
+
+.date-text {
+    font-size: 14px;
+    font-weight: 500;
+    min-width: 120px;
+    text-align: center;
+}
+
+/* ============================================
+   MAIN CONTAINER
+   ============================================ */
+
+.container {
+    padding: 16px;
+    padding-bottom: 90px;
+}
+
+/* ============================================
+   AI INSIGHTS
+   ============================================ */
+
+.ai-insights {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 16px;
+    border-radius: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.ai-insights h3 {
+    font-size: 15px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ai-insights p {
+    font-size: 13px;
+    line-height: 1.6;
+    opacity: 0.95;
+}
+
+/* ============================================
+   MACROS OVERVIEW CARD
+   ============================================ */
+
+.macros-overview {
+    background: white;
+    padding: 20px 16px;
+    border-radius: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.calories-ring {
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+.ring-container {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 12px;
+}
+
+.ring-bg, .ring-progress {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.ring-bg {
+    background: conic-gradient(#e0e0e0 0deg, #e0e0e0 360deg);
+}
+
+.ring-progress {
+    background: conic-gradient(
+        from 0deg,
+        #0066CC 0deg,
+        #0066CC var(--progress, 0deg),
+        transparent var(--progress, 0deg)
+    );
+    transition: background 0.3s;
+}
+
+.ring-inner {
+    position: absolute;
+    width: 84px;
+    height: 84px;
+    background: white;
+    border-radius: 50%;
+    top: 18px;
+    left: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.ring-value {
+    font-size: 26px;
+    font-weight: 700;
+    color: #0066CC;
+}
+
+.ring-label {
+    font-size: 10px;
+    color: #666;
+    margin-top: -3px;
+}
+
+.calories-info {
+    font-size: 13px;
+    color: #666;
+}
+
+.macros-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.macro-item {
+    text-align: center;
+}
+
+.macro-bar {
+    width: 100%;
+    height: 6px;
+    background: #f0f0f0;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 6px;
+}
+
+.macro-progress {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s;
+}
+
+.macro-progress.protein { background: #FF6B9D; }
+.macro-progress.carbs { background: #FDB913; }
+.macro-progress.fat { background: #4ECDC4; }
+
+.macro-label {
+    font-size: 11px;
+    color: #999;
+    margin-bottom: 2px;
+}
+
+.macro-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #333;
+}
+
+.macro-goal {
+    font-size: 10px;
+    color: #999;
+}
+
+/* ============================================
+   TIMELINE / MEALS
+   ============================================ */
+
+.timeline {
+    background: white;
+    padding: 16px;
+    border-radius: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.meal-section {
+    margin-bottom: 20px;
+}
+
+.meal-section:last-child {
+    margin-bottom: 0;
+}
+
+.meal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.meal-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+}
+
+.meal-cals {
+    font-size: 13px;
+    color: #666;
+    font-weight: 500;
+}
+
+.add-food-btn {
+    background: none;
+    border: 2px dashed #ddd;
+    color: #888;
+    padding: 14px;
+    border-radius: 10px;
+    width: 100%;
+    font-size: 14px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 44px;
+}
+
+.add-food-btn:active {
+    border-color: #0066CC;
+    color: #0066CC;
+    background: #f0f7ff;
+}
+
+/* Food items */
+.food-item {
+    background: #f9f9f9;
+    padding: 14px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s;
+}
+
+.food-item-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.food-info h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 3px;
+}
+
+.food-macros {
+    font-size: 12px;
+    color: #999;
+}
+
+.delete-btn {
+    background: #ff4757;
+    color: white;
+    border: none;
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: 8px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+.delete-btn:active {
+    background: #e84143;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 16px;
+    color: #bbb;
+    font-size: 13px;
+}
+
+/* ============================================
+   BOTTOM NAVIGATION
+   ============================================ */
+
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: white;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.06);
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background: none;
+    border: none;
+    color: #999;
+    font-size: 10px;
+    padding: 8px 0;
+    text-decoration: none;
+    min-height: 44px;
+    justify-content: center;
+    transition: color 0.2s;
+}
+
+.nav-btn.active {
+    color: #0066CC;
+}
+
+.nav-icon {
+    font-size: 22px;
+    line-height: 1;
+}
+
+.nav-label {
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.nav-btn--camera {
+    flex: 0 0 auto;
+    background: linear-gradient(135deg, #0066CC, #0099FF);
+    color: white !important;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    margin-top: -18px;
+    box-shadow: 0 4px 14px rgba(0,102,204,0.35);
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+}
+
+.nav-btn--camera .nav-icon {
+    font-size: 24px;
+}
+
+.nav-btn--camera:active {
+    transform: scale(0.92);
+}
+
+/* ============================================
+   MODAL (Bottom Sheet)
+   ============================================ */
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    width: 100%;
+    border-radius: 16px 16px 0 0;
+    padding: 20px;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+    max-height: 92vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.modal-header h2 {
+    font-size: 20px;
+    color: #333;
+    font-weight: 700;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: #999;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Method tabs */
+.input-method-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.method-tab {
+    padding: 12px;
+    background: #f5f5f5;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    text-align: center;
+    transition: all 0.2s;
+    min-height: 44px;
+}
+
+.method-tab.active {
+    background: #e6f2ff;
+    border-color: #0066CC;
+    color: #0066CC;
+}
+
+.method-icon {
+    font-size: 22px;
+    margin-bottom: 4px;
+}
+
+.method-label {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Camera area */
+.camera-area {
+    margin-bottom: 16px;
+}
+
+.camera-placeholder {
+    background: #f8f9fa;
+    border: 2px dashed #ddd;
+    border-radius: 12px;
+    padding: 36px 20px;
+    text-align: center;
+    color: #999;
+}
+
+.camera-placeholder .icon {
+    font-size: 44px;
+    margin-bottom: 8px;
+}
+
+.camera-placeholder p {
+    font-size: 14px;
+}
+
+.camera-sub {
+    font-size: 12px !important;
+    margin-top: 6px;
+    opacity: 0.7;
+}
+
+.photo-preview {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+/* AI Loading */
+.ai-loading {
+    text-align: center;
+    padding: 24px;
+}
+
+.spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid #e0e0e0;
+    border-top-color: #0066CC;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 12px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.ai-loading p {
+    font-size: 14px;
+    color: #666;
+}
+
+/* AI Result */
+.ai-result-card {
+    background: #f0f7ff;
+    border: 1px solid #cce0ff;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 16px;
+}
+
+.ai-result-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.ai-badge {
+    background: #0066CC;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+.ai-confidence {
+    font-size: 11px;
+    color: #666;
+}
+
+.ai-result-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 2px;
+}
+
+.ai-result-portion {
+    font-size: 12px;
+    color: #666;
+}
+
+/* AI Error */
+.ai-error {
+    background: #fff5f5;
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 16px;
+}
+
+.ai-error p {
+    font-size: 13px;
+    color: #dc2626;
+    line-height: 1.5;
+}
+
+/* Forms */
+.form-group {
+    margin-bottom: 14px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #333;
+    font-size: 13px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: border 0.2s;
+    background: white;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #0066CC;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #0066CC 0%, #0099FF 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    transition: transform 0.2s, opacity 0.2s;
+    min-height: 48px;
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+}
+
+/* ============================================
+   SETTINGS PAGE
+   ============================================ */
+
+.settings-page {
+    padding: 0;
+}
+
+.settings-header {
+    background: linear-gradient(135deg, #0066CC 0%, #0099FF 100%);
+    color: white;
+    padding: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.settings-header h1 {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.settings-body {
+    padding: 16px;
+    padding-bottom: 350px;
+}
+
+.settings-section {
+    background: white;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.settings-section h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.settings-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.settings-row input {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 16px;
+}
+
+.settings-row input:focus {
+    outline: none;
+    border-color: #0066CC;
+}
+
+.btn-secondary {
+    padding: 10px 16px;
+    background: #f0f0f0;
+    color: #333;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    min-height: 44px;
+    transition: background 0.2s;
+}
+
+.btn-secondary:active {
+    background: #e0e0e0;
+}
+
+.btn-danger {
+    padding: 10px 16px;
+    background: #fff5f5;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    min-height: 44px;
+    width: 100%;
+}
+
+.btn-danger:active {
+    background: #fef2f2;
+}
+
+.settings-help {
+    font-size: 12px;
+    color: #999;
+    line-height: 1.5;
+    margin-top: 8px;
+}
+
+.settings-help a {
+    color: #0066CC;
+    text-decoration: none;
+}
+
+.key-status {
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 6px;
+}
+
+.key-status.success {
+    color: #16a34a;
+}
+
+.key-status.error {
+    color: #dc2626;
+}
+
+.goals-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.goal-input {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.goal-input label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #666;
+}
+
+.goal-input input {
+    padding: 10px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 16px;
+    text-align: center;
+}
+
+.goal-input input:focus {
+    outline: none;
+    border-color: #0066CC;
+}
+
+.data-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.data-actions button {
+    flex: 1;
+}
+
+/* ============================================
+   TABLET+ BREAKPOINT (768px)
+   ============================================ */
+
+@media (min-width: 768px) {
+    .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        padding-bottom: 90px;
+    }
+
+    .header {
+        padding: 20px;
+    }
+
+    .header h1 {
+        font-size: 24px;
+    }
+
+    .ring-container {
+        width: 140px;
+        height: 140px;
+    }
+
+    .ring-bg, .ring-progress {
+        width: 140px;
+        height: 140px;
+    }
+
+    .ring-inner {
+        width: 100px;
+        height: 100px;
+        top: 20px;
+        left: 20px;
+    }
+
+    .ring-value {
+        font-size: 32px;
+    }
+
+    .macros-grid {
+        gap: 15px;
+    }
+
+    .modal-content {
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    .settings-body {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .ai-insights {
+        padding: 20px;
+    }
+
+    .macros-overview {
+        padding: 24px 20px;
+    }
+}

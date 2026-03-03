@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0066CC">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="stylesheet" href="/style.css">
+    <title>Macro Tracker</title>
+</head>
+<body>
+    <div id="app"></div>
+
+    <nav class="bottom-nav">
+        <a href="#dashboard" class="nav-btn active" data-route="dashboard">
+            <span class="nav-icon">📊</span>
+            <span class="nav-label">Dashboard</span>
+        </a>
+        <button class="nav-btn nav-btn--camera" data-route="log" id="nav-camera-btn">
+            <span class="nav-icon">📷</span>
+        </button>
+        <a href="#settings" class="nav-btn" data-route="settings">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-label">Settings</span>
+        </a>
+    </nav>
+
+    <div class="modal" id="addFoodModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Food</h2>
+                <button class="close-btn" id="modal-close-btn">&times;</button>
+            </div>
+
+            <div class="input-method-tabs">
+                <button class="method-tab active" data-method="camera">
+                    <div class="method-icon">📷</div>
+                    <div class="method-label">Camera</div>
+                </button>
+                <button class="method-tab" data-method="manual">
+                    <div class="method-icon">✏️</div>
+                    <div class="method-label">Manual</div>
+                </button>
+            </div>
+
+            <div id="camera-view" class="input-view">
+                <div class="camera-area" id="camera-area">
+                    <div class="camera-placeholder" id="camera-placeholder">
+                        <div class="icon">📸</div>
+                        <p>Take a photo of your food</p>
+                        <p class="camera-sub">AI will identify it and estimate macros</p>
+                    </div>
+                    <img id="photo-preview" class="photo-preview" style="display:none" alt="Food preview">
+                </div>
+
+                <div class="ai-loading" id="ai-loading" style="display:none">
+                    <div class="spinner"></div>
+                    <p>Analyzing your food...</p>
+                </div>
+
+                <div class="ai-result-card" id="ai-result" style="display:none">
+                    <div class="ai-result-header">
+                        <span class="ai-badge">AI Identified</span>
+                        <span class="ai-confidence" id="ai-confidence"></span>
+                    </div>
+                    <div class="ai-result-name" id="ai-result-name"></div>
+                    <div class="ai-result-portion" id="ai-result-portion"></div>
+                </div>
+
+                <div class="ai-error" id="ai-error" style="display:none">
+                    <p id="ai-error-text"></p>
+                </div>
+
+                <button class="btn-primary" id="camera-capture-btn">
+                    📸 Take Photo
+                </button>
+
+                <div id="camera-confirm" style="display:none">
+                    <div class="form-group">
+                        <label>Meal</label>
+                        <select id="camera-meal">
+                            <option value="breakfast">Breakfast</option>
+                            <option value="lunch">Lunch</option>
+                            <option value="dinner">Dinner</option>
+                            <option value="snacks">Snacks</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Food Name</label>
+                        <input type="text" id="camera-food-name" placeholder="e.g., Grilled Chicken">
+                    </div>
+                    <div class="form-group">
+                        <label>Calories</label>
+                        <input type="number" id="camera-calories" placeholder="0">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Protein (g)</label>
+                            <input type="number" id="camera-protein" placeholder="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Carbs (g)</label>
+                            <input type="number" id="camera-carbs" placeholder="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Fat (g)</label>
+                            <input type="number" id="camera-fat" placeholder="0">
+                        </div>
+                    </div>
+                    <button class="btn-primary" id="camera-add-btn">Add Food</button>
+                </div>
+            </div>
+
+            <div id="manual-view" class="input-view" style="display: none;">
+                <div class="form-group">
+                    <label>Meal</label>
+                    <select id="food-meal">
+                        <option value="breakfast">Breakfast</option>
+                        <option value="lunch">Lunch</option>
+                        <option value="dinner">Dinner</option>
+                        <option value="snacks">Snacks</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Food Name</label>
+                    <input type="text" id="food-name" placeholder="e.g., Grilled Chicken Breast">
+                </div>
+                <div class="form-group">
+                    <label>Calories</label>
+                    <input type="number" id="food-calories" placeholder="0">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Protein (g)</label>
+                        <input type="number" id="food-protein" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Carbs (g)</label>
+                        <input type="number" id="food-carbs" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Fat (g)</label>
+                        <input type="number" id="food-fat" placeholder="0">
+                    </div>
+                </div>
+                <button class="btn-primary" id="manual-add-btn">Add Food</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/js/main.js"></script>
+</body>
+</html>
