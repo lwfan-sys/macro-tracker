@@ -11,6 +11,17 @@ export function saveFoodsForDate(dateStr, foods) {
   localStorage.setItem(DATE_PREFIX + dateStr, JSON.stringify(foods));
 }
 
+export function hasDataForDate(dateStr) {
+  const raw = localStorage.getItem(DATE_PREFIX + dateStr);
+  if (!raw) return false;
+  try {
+    const foods = JSON.parse(raw);
+    return Array.isArray(foods) && foods.length > 0;
+  } catch {
+    return false;
+  }
+}
+
 export function loadSettings() {
   const raw = localStorage.getItem(SETTINGS_KEY);
   return raw ? JSON.parse(raw) : { geminiApiKey: '' };

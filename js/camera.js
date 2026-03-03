@@ -11,8 +11,15 @@ export function initCamera() {
 
 export function capturePhoto() {
   return new Promise((resolve, reject) => {
+    let settled = false;
+
     fileInput.onchange = async (e) => {
+      settled = true;
+      window.removeEventListener('focus', onFocus);
       const file = e.target.files[0];
+      // Clear AFTER reading file ref so re-selecting same file works next time
+      fileInput.value = '';
+
       if (!file) {
         reject(new Error('No file selected'));
         return;
@@ -28,7 +35,19 @@ export function capturePhoto() {
         reject(err);
       }
     };
-    fileInput.value = '';
+
+    // Detect cancel: window regains focus after file picker with no change
+    const onFocus = () => {
+      setTimeout(() => {
+        if (!settled) {
+          window.removeEventListener('focus', onFocus);
+          fileInput.onchange = null;
+          reject(new Error('No file selected'));
+        }
+      }, 500);
+    };
+    window.addEventListener('focus', onFocus);
+
     fileInput.click();
   });
 }

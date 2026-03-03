@@ -1,5 +1,5 @@
 import { state, updateState } from './state.js';
-import { loadFoodsForDate, saveFoodsForDate } from './storage.js';
+import { loadFoodsForDate, saveFoodsForDate, hasDataForDate } from './storage.js';
 import { capturePhoto } from './camera.js';
 import { analyzeFood } from './gemini.js';
 
@@ -10,100 +10,138 @@ import { analyzeFood } from './gemini.js';
 export function renderDashboard(container) {
   const totals = calculateTotals();
   const dateLabel = getDateLabel(state.currentDate);
-  const insight = generateInsightText(totals, state.goals);
+  const remaining = Math.max(state.goals.calories - totals.calories, 0);
+  const calPercent = Math.min((totals.calories / state.goals.calories) * 100, 100);
+  const isOver = totals.calories > state.goals.calories;
+  const weekDays = getWeekDays(state.currentDate);
 
   container.innerHTML = `
     <div class="header">
       <div class="header-top">
-        <h1>Macro Tracker</h1>
+        <h1>Today</h1>
+        <div class="date-picker">
+          <button data-action="date-prev" aria-label="Previous day">&#8249;</button>
+          <div class="date-text">${dateLabel}</div>
+          <button data-action="date-next" aria-label="Next day">&#8250;</button>
+        </div>
       </div>
-      <div class="date-picker">
-        <button data-action="date-prev">&#8249;</button>
-        <div class="date-text">${dateLabel}</div>
-        <button data-action="date-next">&#8250;</button>
-      </div>
+    </div>
+
+    <div class="week-strip">
+      ${weekDays.map(day => {
+        const hasData = hasDataForDate(day.dateStr);
+        const classes = [
+          'week-day-dot',
+          day.isCurrent ? 'today' : '',
+          hasData && !day.isCurrent ? 'has-data' : ''
+        ].filter(Boolean).join(' ');
+        const dayNum = parseInt(day.dateStr.split('-')[2]);
+        return `
+          <div class="week-day" data-action="go-to-date" data-date="${day.dateStr}">
+            <span class="week-day-label">${day.label}</span>
+            <span class="${classes}">${day.isCurrent ? dayNum : (hasData ? '\u2713' : dayNum)}</span>
+          </div>`;
+      }).join('')}
     </div>
 
     <div class="container">
-      <div class="ai-insights">
-        <h3>🤖 AI Insights</h3>
-        <p>${insight}</p>
-      </div>
-
-      <div class="macros-overview">
-        <div class="calories-ring">
-          <div class="ring-container">
-            <div class="ring-bg"></div>
-            <div class="ring-progress" id="calories-ring" style="--progress: ${getCalorieProgress(totals)}deg"></div>
-            <div class="ring-inner">
-              <div class="ring-value">${totals.calories}</div>
-              <div class="ring-label">calories</div>
-            </div>
-          </div>
-          <div class="calories-info">
-            ${Math.max(state.goals.calories - totals.calories, 0)} remaining of ${state.goals.calories} goal
-          </div>
+      <div class="calorie-summary">
+        <div class="calorie-header">
+          <span class="calorie-title">Calories</span>
+          <span class="calorie-remaining">${isOver ? 'Over by ' + (totals.calories - state.goals.calories) : remaining + ' left'}</span>
         </div>
-
-        <div class="macros-grid">
-          ${renderMacroItem('Protein', 'protein', totals.protein, state.goals.protein)}
-          ${renderMacroItem('Carbs', 'carbs', totals.carbs, state.goals.carbs)}
-          ${renderMacroItem('Fat', 'fat', totals.fat, state.goals.fat)}
+        <div class="calorie-numbers">
+          <span class="calorie-current">${totals.calories}</span>
+          <span class="calorie-goal-text">/ ${state.goals.calories} cal</span>
+        </div>
+        <div class="calorie-bar">
+          <div class="calorie-bar-fill${isOver ? ' over' : ''}" style="width: ${calPercent}%"></div>
         </div>
       </div>
 
-      <div class="timeline">
-        ${renderMealSection('breakfast', '🌅 Breakfast', totals.breakfast)}
-        ${renderMealSection('lunch', '☀️ Lunch', totals.lunch)}
-        ${renderMealSection('dinner', '🌙 Dinner', totals.dinner)}
-        ${renderMealSection('snacks', '🍎 Snacks', totals.snacks)}
+      <div class="macros-card">
+        <div class="macros-card-title">Macros</div>
+        ${renderMacroRow('Carbs', 'carbs', totals.carbs, state.goals.carbs)}
+        ${renderMacroRow('Fat', 'fat', totals.fat, state.goals.fat)}
+        ${renderMacroRow('Protein', 'protein', totals.protein, state.goals.protein)}
       </div>
+
+      ${renderMealCard('breakfast', 'Breakfast')}
+      ${renderMealCard('lunch', 'Lunch')}
+      ${renderMealCard('dinner', 'Dinner')}
+      ${renderMealCard('snacks', 'Snacks')}
     </div>
   `;
 }
 
-function renderMacroItem(label, key, value, goal) {
+function renderMacroRow(label, key, value, goal) {
   const percent = Math.min((value / goal) * 100, 100);
   return `
-    <div class="macro-item">
-      <div class="macro-label">${label}</div>
-      <div class="macro-bar">
-        <div class="macro-progress ${key}" style="width: ${percent}%"></div>
+    <div class="macro-row">
+      <span class="macro-row-label">${label}</span>
+      <div class="macro-row-bar">
+        <div class="macro-row-fill ${key}" style="width: ${percent}%"></div>
       </div>
-      <div class="macro-value">${value}g</div>
-      <div class="macro-goal">of ${goal}g</div>
+      <span class="macro-row-value"><strong>${value}g</strong> / ${goal}g</span>
     </div>
   `;
 }
 
-function renderMealSection(meal, title, mealCals) {
+function renderMealCard(meal, title) {
   const mealFoods = state.foods.filter(f => f.meal === meal);
+  const mealCals = mealFoods.reduce((sum, f) => sum + f.calories, 0);
+
   const foodsHtml = mealFoods.length > 0
     ? mealFoods.map(food => `
         <div class="food-item">
           <div class="food-info">
             <h4>${escapeHtml(food.name)}</h4>
-            <div class="food-macros">
-              ${food.calories} cal &bull; P: ${food.protein}g &bull; C: ${food.carbs}g &bull; F: ${food.fat}g
-            </div>
+            <div class="food-macros">P: ${food.protein}g &middot; C: ${food.carbs}g &middot; F: ${food.fat}g</div>
           </div>
-          <button class="delete-btn" data-action="delete-food" data-id="${food.id}">&times;</button>
+          <div class="food-item-right">
+            <span class="food-cals">${food.calories}</span>
+            <button class="delete-btn" data-action="delete-food" data-id="${food.id}">&times;</button>
+          </div>
         </div>
       `).join('')
-    : '<div class="empty-state">No foods logged yet</div>';
+    : '<div class="empty-meal">No foods logged</div>';
 
   return `
-    <div class="meal-section">
-      <div class="meal-header">
-        <div class="meal-title">${title}</div>
-        <div class="meal-cals">${mealCals} cal</div>
+    <div class="meal-card">
+      <div class="meal-card-header">
+        <span class="meal-card-title">${title}</span>
+        <span class="meal-card-cals">${mealCals} cal</span>
       </div>
-      ${foodsHtml}
-      <button class="add-food-btn" data-action="add-food" data-meal="${meal}">
-        <span>+</span> Add Food
-      </button>
+      <div class="meal-card-body">
+        ${foodsHtml}
+      </div>
+      <button class="meal-log-btn" data-action="add-food" data-meal="${meal}">+ Log Food</button>
     </div>
   `;
+}
+
+function getWeekDays(currentDateStr) {
+  const current = new Date(currentDateStr + 'T12:00:00');
+  const today = new Date().toISOString().split('T')[0];
+  const dayOfWeek = current.getDay();
+  const startOfWeek = new Date(current);
+  startOfWeek.setDate(current.getDate() - dayOfWeek);
+
+  const days = [];
+  const labels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(startOfWeek);
+    d.setDate(startOfWeek.getDate() + i);
+    const dateStr = d.toISOString().split('T')[0];
+    days.push({
+      label: labels[i],
+      dateStr,
+      isToday: dateStr === today,
+      isCurrent: dateStr === currentDateStr,
+    });
+  }
+  return days;
 }
 
 // ============================================
@@ -116,12 +154,14 @@ export function renderSettings(container) {
 
   container.innerHTML = `
     <div class="settings-page">
-      <div class="settings-header">
-        <h1>Settings</h1>
+      <div class="header">
+        <div class="header-top">
+          <h1>Settings</h1>
+        </div>
       </div>
       <div class="settings-body">
         <div class="settings-section">
-          <h3>🔑 Gemini API Key</h3>
+          <h3>Gemini API Key</h3>
           <div class="settings-row">
             <input type="password" id="api-key-input" value="${escapeHtml(apiKey)}" placeholder="Paste your API key here">
             <button class="btn-secondary" id="toggle-key-btn">Show</button>
@@ -130,16 +170,16 @@ export function renderSettings(container) {
           <div class="key-status" id="key-status"></div>
           <div class="settings-help">
             <strong>Get a free API key:</strong><br>
-            1. Go to <a href="https://ai.google.dev" target="_blank" rel="noopener">ai.google.dev</a><br>
+            1. Go to <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a><br>
             2. Sign in with Google<br>
-            3. Click "Get API key" &rarr; "Create API key"<br>
+            3. Click "Create API key"<br>
             4. Copy and paste it above<br>
-            <br>Free tier: 15 requests/minute — plenty for personal use.
+            <br>Free tier: 15 requests/minute.
           </div>
         </div>
 
         <div class="settings-section">
-          <h3>🎯 Daily Macro Goals</h3>
+          <h3>Daily Macro Goals</h3>
           <div class="goals-grid">
             <div class="goal-input">
               <label>Calories</label>
@@ -162,7 +202,7 @@ export function renderSettings(container) {
         </div>
 
         <div class="settings-section">
-          <h3>📦 Data</h3>
+          <h3>Data</h3>
           <div class="data-actions">
             <button class="btn-secondary" id="export-btn">Export Data</button>
             <button class="btn-danger" id="clear-btn">Clear All Data</button>
@@ -173,6 +213,21 @@ export function renderSettings(container) {
   `;
 
   attachSettingsListeners();
+}
+
+export function renderPlaceholder(container, title, message) {
+  container.innerHTML = `
+    <div class="header">
+      <div class="header-top">
+        <h1>${escapeHtml(title)}</h1>
+      </div>
+    </div>
+    <div class="container">
+      <div class="calorie-summary" style="text-align: center; padding: 40px 20px;">
+        <p style="font-size: 16px; color: var(--text-secondary);">${escapeHtml(message)}</p>
+      </div>
+    </div>
+  `;
 }
 
 function attachSettingsListeners() {
@@ -188,7 +243,9 @@ function attachSettingsListeners() {
   // Auto-save API key on blur
   apiInput?.addEventListener('blur', () => {
     const key = apiInput.value.trim();
-    const { saveApiKey } = require('./settings.js');
+    if (key) {
+      import('./settings.js').then(mod => mod.saveApiKey(key));
+    }
   });
 
   // Save API key on change
@@ -210,17 +267,24 @@ function attachSettingsListeners() {
     statusEl.className = 'key-status';
     try {
       const mod = await import('./settings.js');
-      const ok = await mod.testApiKey(key);
-      if (ok) {
-        statusEl.textContent = '✓ API key is valid!';
+      const result = await mod.testApiKey(key);
+      if (result.valid) {
+        statusEl.textContent = '\u2713 API key is valid!';
         statusEl.className = 'key-status success';
         mod.saveApiKey(key);
       } else {
-        statusEl.textContent = '✗ API key is invalid.';
+        const messages = {
+          INVALID_KEY: '\u2717 API key is invalid. Please check and try again.',
+          RATE_LIMITED: '\u2717 Rate limited. Wait a moment and try again.',
+          TIMEOUT: '\u2717 Request timed out. Check your internet connection.',
+          NETWORK_ERROR: '\u2717 Network error. Check your connection.',
+        };
+        statusEl.textContent = messages[result.reason] || '\u2717 Could not verify key.';
         statusEl.className = 'key-status error';
       }
-    } catch {
-      statusEl.textContent = '✗ Could not verify key. Check your connection.';
+    } catch (err) {
+      console.error('Test key error:', err);
+      statusEl.textContent = '\u2717 Unexpected error. Check browser console.';
       statusEl.className = 'key-status error';
     }
   });
@@ -257,15 +321,12 @@ function attachSettingsListeners() {
 export function initModal() {
   const modal = document.getElementById('addFoodModal');
 
-  // Close on backdrop click
   modal.addEventListener('click', (e) => {
     if (e.target === modal) closeModal();
   });
 
-  // Close button
   document.getElementById('modal-close-btn').addEventListener('click', closeModal);
 
-  // Method tab switching
   document.querySelectorAll('.method-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       const method = tab.dataset.method;
@@ -277,15 +338,12 @@ export function initModal() {
     });
   });
 
-  // Camera capture button
   document.getElementById('camera-capture-btn').addEventListener('click', handleCameraCapture);
 
-  // Camera add food button
   document.getElementById('camera-add-btn').addEventListener('click', () => {
     addFoodFromForm('camera');
   });
 
-  // Manual add food button
   document.getElementById('manual-add-btn').addEventListener('click', () => {
     addFoodFromForm('manual');
   });
@@ -295,13 +353,10 @@ export function openModal(meal) {
   const modal = document.getElementById('addFoodModal');
   updateState({ currentMeal: meal || 'breakfast', modalOpen: true });
 
-  // Set meal selectors
   document.getElementById('food-meal').value = state.currentMeal;
   document.getElementById('camera-meal').value = state.currentMeal;
 
-  // Reset camera view
   resetCameraView();
-
   modal.classList.add('active');
 }
 
@@ -341,26 +396,22 @@ async function handleCameraCapture() {
   try {
     const { base64, mimeType, dataUrl } = await capturePhoto();
 
-    // Show preview
     const preview = document.getElementById('photo-preview');
     preview.src = dataUrl;
     preview.style.display = 'block';
     document.getElementById('camera-placeholder').style.display = 'none';
 
-    // Check for API key
     if (!state.settings.geminiApiKey) {
       showCameraError('Set up your Gemini API key in Settings to enable AI food scanning.');
-      document.getElementById('camera-capture-btn').textContent = '📸 Take Photo';
+      document.getElementById('camera-capture-btn').textContent = 'Take Photo';
       return;
     }
 
-    // Show loading
     document.getElementById('ai-loading').style.display = 'block';
     document.getElementById('camera-capture-btn').style.display = 'none';
 
     const result = await analyzeFood(base64, mimeType, state.settings.geminiApiKey);
 
-    // Hide loading, show result
     document.getElementById('ai-loading').style.display = 'none';
 
     const resultCard = document.getElementById('ai-result');
@@ -369,24 +420,22 @@ async function handleCameraCapture() {
     document.getElementById('ai-confidence').textContent = result.confidence ? `(${result.confidence} confidence)` : '';
     document.getElementById('ai-result-portion').textContent = result.portion || '';
 
-    // Fill in the camera form
     document.getElementById('camera-food-name').value = result.name;
     document.getElementById('camera-calories').value = result.calories;
     document.getElementById('camera-protein').value = result.protein;
     document.getElementById('camera-carbs').value = result.carbs;
     document.getElementById('camera-fat').value = result.fat;
 
-    // Show confirm form
     document.getElementById('camera-confirm').style.display = 'block';
 
     updateState({ aiResult: result });
   } catch (err) {
     document.getElementById('ai-loading').style.display = 'none';
     document.getElementById('camera-capture-btn').style.display = '';
-    document.getElementById('camera-capture-btn').textContent = '📸 Retry Photo';
+    document.getElementById('camera-capture-btn').textContent = 'Retry Photo';
 
     const message = getErrorMessage(err);
-    showCameraError(message);
+    if (message) showCameraError(message);
   }
 }
 
@@ -402,7 +451,7 @@ function getErrorMessage(err) {
   if (msg === 'INVALID_API_KEY') return 'Your API key appears to be invalid. Check Settings.';
   if (msg === 'RATE_LIMITED') return 'Too many requests. Wait a moment and try again.';
   if (msg === 'PARSE_ERROR' || msg === 'EMPTY_RESPONSE' || msg === 'INVALID_FORMAT') return 'Could not identify this food. Try again or enter manually.';
-  if (msg === 'No file selected') return ''; // User cancelled, no error to show
+  if (msg === 'No file selected') return '';
   return 'Something went wrong. Try again or use manual entry.';
 }
 
@@ -415,10 +464,10 @@ function addFoodFromForm(source) {
   const mealId = source === 'camera' ? 'camera-meal' : 'food-meal';
 
   const name = document.getElementById(prefix + (source === 'camera' ? 'food-name' : 'name')).value.trim();
-  const calories = parseInt(document.getElementById(prefix + 'calories').value) || 0;
-  const protein = parseInt(document.getElementById(prefix + 'protein').value) || 0;
-  const carbs = parseInt(document.getElementById(prefix + 'carbs').value) || 0;
-  const fat = parseInt(document.getElementById(prefix + 'fat').value) || 0;
+  const calories = Math.max(0, parseInt(document.getElementById(prefix + 'calories').value) || 0);
+  const protein = Math.max(0, parseInt(document.getElementById(prefix + 'protein').value) || 0);
+  const carbs = Math.max(0, parseInt(document.getElementById(prefix + 'carbs').value) || 0);
+  const fat = Math.max(0, parseInt(document.getElementById(prefix + 'fat').value) || 0);
   const meal = document.getElementById(mealId).value;
 
   if (!name) {
@@ -443,7 +492,6 @@ function addFoodFromForm(source) {
 
   closeModal();
 
-  // Re-render dashboard
   if (state.currentRoute === 'dashboard' || state.currentRoute === '') {
     renderDashboard(document.getElementById('app'));
   }
@@ -470,6 +518,14 @@ export function changeDate(offset) {
   const foods = loadFoodsForDate(newDate);
   updateState({ currentDate: newDate, foods });
 
+  if (state.currentRoute === 'dashboard' || state.currentRoute === '') {
+    renderDashboard(document.getElementById('app'));
+  }
+}
+
+export function goToDate(dateStr) {
+  const foods = loadFoodsForDate(dateStr);
+  updateState({ currentDate: dateStr, foods });
   if (state.currentRoute === 'dashboard' || state.currentRoute === '') {
     renderDashboard(document.getElementById('app'));
   }
@@ -506,50 +562,16 @@ function calculateTotals() {
   }, { calories: 0, protein: 0, carbs: 0, fat: 0, breakfast: 0, lunch: 0, dinner: 0, snacks: 0 });
 }
 
-function getCalorieProgress(totals) {
-  return Math.min((totals.calories / state.goals.calories) * 360, 360);
-}
-
-function generateInsightText(totals, goals) {
-  if (state.foods.length === 0) {
-    return 'Start logging meals to get personalized insights about your nutrition.';
-  }
-
-  const insights = [];
-
-  if (totals.calories < goals.calories * 0.7) {
-    insights.push("You're under your calorie goal. Consider adding a protein-rich snack.");
-  } else if (totals.calories > goals.calories * 1.2) {
-    insights.push("You've exceeded your calorie goal. Fine occasionally, especially after intense workouts!");
-  }
-
-  if (totals.protein < goals.protein * 0.8) {
-    insights.push('Protein is low today. Try lean meats, fish, or plant-based proteins.');
-  }
-
-  if (totals.protein > goals.protein && totals.carbs < goals.carbs * 0.7) {
-    insights.push('Great protein! Consider adding complex carbs for sustained energy.');
-  }
-
-  if (insights.length === 0) {
-    insights.push("You're hitting your targets well! Keep up the balanced approach.");
-  }
-
-  return insights[0];
-}
-
 // ============================================
 // BOTTOM NAV
 // ============================================
 
 export function initBottomNav() {
-  // Camera button opens modal and triggers capture
   document.getElementById('nav-camera-btn').addEventListener('click', (e) => {
     e.preventDefault();
     openModal(state.currentMeal);
   });
 
-  // Event delegation on #app for dashboard actions
   document.getElementById('app').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
@@ -559,6 +581,7 @@ export function initBottomNav() {
     if (action === 'delete-food') deleteFood(Number(btn.dataset.id));
     if (action === 'date-prev') changeDate(-1);
     if (action === 'date-next') changeDate(1);
+    if (action === 'go-to-date') goToDate(btn.dataset.date);
   });
 }
 

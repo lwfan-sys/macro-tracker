@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#0066CC">
+    <meta name="theme-color" content="#FFFFFF">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
     <title>Macro Tracker</title>
 </head>
@@ -16,32 +19,69 @@
 
     <nav class="bottom-nav">
         <a href="#dashboard" class="nav-btn active" data-route="dashboard">
-            <span class="nav-icon">📊</span>
-            <span class="nav-label">Dashboard</span>
+            <span class="nav-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+                </svg>
+            </span>
+            <span class="nav-label">Today</span>
         </a>
-        <button class="nav-btn nav-btn--camera" data-route="log" id="nav-camera-btn">
-            <span class="nav-icon">📷</span>
+        <a href="#plan" class="nav-btn" data-route="plan">
+            <span class="nav-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+                </svg>
+            </span>
+            <span class="nav-label">Plan</span>
+        </a>
+        <button class="nav-btn nav-btn--fab" id="nav-camera-btn" data-route="log">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
         </button>
+        <a href="#progress" class="nav-btn" data-route="progress">
+            <span class="nav-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+            </span>
+            <span class="nav-label">Progress</span>
+        </a>
         <a href="#settings" class="nav-btn" data-route="settings">
-            <span class="nav-icon">⚙️</span>
-            <span class="nav-label">Settings</span>
+            <span class="nav-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
+                </svg>
+            </span>
+            <span class="nav-label">More</span>
         </a>
     </nav>
 
     <div class="modal" id="addFoodModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Add Food</h2>
+                <h2>Log Food</h2>
                 <button class="close-btn" id="modal-close-btn">&times;</button>
             </div>
 
             <div class="input-method-tabs">
                 <button class="method-tab active" data-method="camera">
-                    <div class="method-icon">📷</div>
+                    <div class="method-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                            <circle cx="12" cy="13" r="4"/>
+                        </svg>
+                    </div>
                     <div class="method-label">Camera</div>
                 </button>
                 <button class="method-tab" data-method="manual">
-                    <div class="method-icon">✏️</div>
+                    <div class="method-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </div>
                     <div class="method-label">Manual</div>
                 </button>
             </div>
@@ -49,7 +89,12 @@
             <div id="camera-view" class="input-view">
                 <div class="camera-area" id="camera-area">
                     <div class="camera-placeholder" id="camera-placeholder">
-                        <div class="icon">📸</div>
+                        <div class="camera-placeholder-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                                <circle cx="12" cy="13" r="4"/>
+                            </svg>
+                        </div>
                         <p>Take a photo of your food</p>
                         <p class="camera-sub">AI will identify it and estimate macros</p>
                     </div>
@@ -74,9 +119,7 @@
                     <p id="ai-error-text"></p>
                 </div>
 
-                <button class="btn-primary" id="camera-capture-btn">
-                    📸 Take Photo
-                </button>
+                <button class="btn-primary" id="camera-capture-btn">Take Photo</button>
 
                 <div id="camera-confirm" style="display:none">
                     <div class="form-group">
