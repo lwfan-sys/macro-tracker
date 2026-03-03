@@ -38,15 +38,10 @@ export function handleClear() {
 }
 
 export async function testApiKey(key) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
+  // Use the models list endpoint — simple GET, no model dependency
+  const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${key}`;
   try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: 'Reply with just the word OK' }] }]
-      })
-    });
+    const res = await fetch(url);
     return res.ok;
   } catch {
     return false;
