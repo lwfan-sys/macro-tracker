@@ -4,20 +4,15 @@ export function initCamera() {
   fileInput = document.createElement('input');
   fileInput.type = 'file';
   fileInput.accept = 'image/*';
-  fileInput.setAttribute('capture', 'environment');
+  // No 'capture' attribute — lets user choose between camera and photo library
   fileInput.style.display = 'none';
   document.body.appendChild(fileInput);
 }
 
 export function capturePhoto() {
   return new Promise((resolve, reject) => {
-    let settled = false;
-
     fileInput.onchange = async (e) => {
-      settled = true;
-      window.removeEventListener('focus', onFocus);
       const file = e.target.files[0];
-      // Clear AFTER reading file ref so re-selecting same file works next time
       fileInput.value = '';
 
       if (!file) {
@@ -35,18 +30,6 @@ export function capturePhoto() {
         reject(err);
       }
     };
-
-    // Detect cancel: window regains focus after file picker with no change
-    const onFocus = () => {
-      setTimeout(() => {
-        if (!settled) {
-          window.removeEventListener('focus', onFocus);
-          fileInput.onchange = null;
-          reject(new Error('No file selected'));
-        }
-      }, 500);
-    };
-    window.addEventListener('focus', onFocus);
 
     fileInput.click();
   });

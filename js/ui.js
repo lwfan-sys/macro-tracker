@@ -430,12 +430,15 @@ async function handleCameraCapture() {
 
     updateState({ aiResult: result });
   } catch (err) {
+    console.error('Camera/AI error:', err);
     document.getElementById('ai-loading').style.display = 'none';
     document.getElementById('camera-capture-btn').style.display = '';
-    document.getElementById('camera-capture-btn').textContent = 'Retry Photo';
 
     const message = getErrorMessage(err);
-    if (message) showCameraError(message);
+    if (message) {
+      document.getElementById('camera-capture-btn').textContent = 'Retry Photo';
+      showCameraError(message);
+    }
   }
 }
 
