@@ -4,7 +4,7 @@ export function initCamera() {
   fileInput = document.createElement('input');
   fileInput.type = 'file';
   fileInput.accept = 'image/*';
-  fileInput.setAttribute('capture', 'environment');
+  // No 'capture' attribute — lets user choose between camera and photo library
   fileInput.style.display = 'none';
   document.body.appendChild(fileInput);
 }
@@ -13,6 +13,8 @@ export function capturePhoto() {
   return new Promise((resolve, reject) => {
     fileInput.onchange = async (e) => {
       const file = e.target.files[0];
+      fileInput.value = '';
+
       if (!file) {
         reject(new Error('No file selected'));
         return;
@@ -28,7 +30,7 @@ export function capturePhoto() {
         reject(err);
       }
     };
-    fileInput.value = '';
+
     fileInput.click();
   });
 }
