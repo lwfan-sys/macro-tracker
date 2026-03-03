@@ -1,7 +1,7 @@
 import { state, updateState } from './state.js';
 import { loadFoodsForDate, saveFoodsForDate, hasDataForDate } from './storage.js';
 import { capturePhoto } from './camera.js';
-import { analyzeFood } from './gemini.js';
+import { analyzeFood, lookupFood } from './gemini.js';
 
 // ============================================
 // DASHBOARD RENDERING
@@ -347,6 +347,15 @@ export function initModal() {
   document.getElementById('manual-add-btn').addEventListener('click', () => {
     addFoodFromForm('manual');
   });
+
+  document.getElementById('food-lookup-btn').addEventListener('click', handleFoodLookup);
+
+  document.getElementById('food-search').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleFoodLookup();
+    }
+  });
 }
 
 export function openModal(meal) {
@@ -378,7 +387,7 @@ function resetCameraView() {
 }
 
 function clearForms() {
-  ['food-name', 'food-calories', 'food-protein', 'food-carbs', 'food-fat'].forEach(id => {
+  ['food-search', 'food-name', 'food-calories', 'food-protein', 'food-carbs', 'food-fat'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -386,6 +395,53 @@ function clearForms() {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
+  const lookupStatus = document.getElementById('lookup-status');
+  if (lookupStatus) { lookupStatus.textContent = ''; lookupStatus.className = 'lookup-status'; }
+}
+
+// ============================================
+// TEXT FOOD LOOKUP
+// ============================================
+
+async function handleFoodLookup() {
+  const searchInput = document.getElementById('food-search');
+  const statusEl = document.getElementById('lookup-status');
+  const query = searchInput.value.trim();
+
+  if (!query) {
+    statusEl.textContent = 'Type a food to look up (e.g., "chicken breast, 200g")';
+    statusEl.className = 'lookup-status error';
+    return;
+  }
+
+  if (!state.settings.geminiApiKey) {
+    statusEl.textContent = 'Set up your Gemini API key in Settings first.';
+    statusEl.className = 'lookup-status error';
+    return;
+  }
+
+  statusEl.textContent = 'Looking up...';
+  statusEl.className = 'lookup-status';
+  document.getElementById('food-lookup-btn').disabled = true;
+
+  try {
+    const result = await lookupFood(query, state.settings.geminiApiKey);
+
+    document.getElementById('food-name').value = result.name;
+    document.getElementById('food-calories').value = result.calories;
+    document.getElementById('food-protein').value = result.protein;
+    document.getElementById('food-carbs').value = result.carbs;
+    document.getElementById('food-fat').value = result.fat;
+
+    statusEl.textContent = result.portion ? `Portion: ${result.portion}` : 'Found! Review and tap Add Food.';
+    statusEl.className = 'lookup-status success';
+  } catch (err) {
+    console.error('Food lookup error:', err);
+    statusEl.textContent = getErrorMessage(err) || 'Could not look up food. Try again.';
+    statusEl.className = 'lookup-status error';
+  } finally {
+    document.getElementById('food-lookup-btn').disabled = false;
+  }
 }
 
 // ============================================
@@ -453,7 +509,12 @@ function getErrorMessage(err) {
   if (msg === 'NO_API_KEY') return 'Set up your Gemini API key in Settings to enable AI food scanning.';
   if (msg === 'INVALID_API_KEY') return 'Your API key appears to be invalid. Check Settings.';
   if (msg === 'RATE_LIMITED') return 'Too many requests. Wait a moment and try again.';
-  if (msg === 'PARSE_ERROR' || msg === 'EMPTY_RESPONSE' || msg === 'INVALID_FORMAT') return 'Could not identify this food. Try again or enter manually.';
+  if (msg === 'TIMEOUT') return 'Request timed out. Check your internet connection and try again.';
+  if (msg === 'NETWORK_ERROR') return 'Network error. Check your internet connection.';
+  if (msg === 'CONTENT_BLOCKED') return 'Image was blocked by safety filters. Try a different photo.';
+  if (msg === 'BAD_REQUEST') return 'Request failed. Try a different photo or use text search.';
+  if (msg === 'API_ERROR') return 'API error. Check your API key in Settings or try again later.';
+  if (msg === 'PARSE_ERROR' || msg === 'EMPTY_RESPONSE' || msg === 'INVALID_FORMAT') return 'Could not identify this food. Try again or use text search.';
   if (msg === 'No file selected') return '';
   return 'Something went wrong. Try again or use manual entry.';
 }

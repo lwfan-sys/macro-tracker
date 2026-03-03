@@ -777,6 +777,35 @@ body:has(.modal.active) .bottom-nav {
   border-color: var(--primary);
 }
 
+.search-row {
+  display: flex;
+  gap: 8px;
+}
+
+.search-row input {
+  flex: 1;
+}
+
+.search-row .btn-secondary {
+  white-space: nowrap;
+  padding: 12px 16px;
+}
+
+.lookup-status {
+  font-size: 13px;
+  margin-top: 4px;
+  min-height: 18px;
+  color: var(--text-secondary);
+}
+
+.lookup-status.success {
+  color: var(--green);
+}
+
+.lookup-status.error {
+  color: var(--red);
+}
+
 .form-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
