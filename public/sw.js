@@ -1,4 +1,4 @@
-const CACHE_NAME = 'macro-tracker-v1';
+const CACHE_NAME = 'macro-tracker-v2';
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
@@ -14,29 +14,27 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  // Skip API calls
+  // Skip API calls entirely — don't cache or intercept
   if (e.request.url.includes('generativelanguage.googleapis.com')) return;
 
   // Skip non-GET requests
   if (e.request.method !== 'GET') return;
 
+  // Network-first: try network, fall back to cache
   e.respondWith(
-    caches.match(e.request).then(cached => {
-      if (cached) return cached;
-
-      return fetch(e.request).then(response => {
-        // Cache successful responses for app shell
-        if (response.ok && e.request.url.startsWith(self.location.origin)) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
-        }
-        return response;
-      });
-    }).catch(() => {
-      // Offline fallback
-      if (e.request.mode === 'navigate') {
-        return caches.match('/');
+    fetch(e.request).then(response => {
+      if (response.ok && e.request.url.startsWith(self.location.origin)) {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
       }
+      return response;
+    }).catch(() => {
+      return caches.match(e.request).then(cached => {
+        if (cached) return cached;
+        if (e.request.mode === 'navigate') {
+          return caches.match('/');
+        }
+      });
     })
   );
 });
