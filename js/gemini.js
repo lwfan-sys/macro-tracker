@@ -1,4 +1,16 @@
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+
+async function fetchWithRetry(url, options, maxRetries = 3) {
+  for (let i = 0; i < maxRetries; i++) {
+    const response = await fetch(url, options);
+    if (response.status === 429 && i < maxRetries - 1) {
+      // Wait 2s, 4s, then 8s between retries
+      await new Promise(r => setTimeout(r, 2000 * Math.pow(2, i)));
+      continue;
+    }
+    return response;
+  }
+}
 
 export async function analyzeFood(base64Image, mimeType, apiKey) {
   if (!apiKey) {
@@ -35,7 +47,7 @@ If you cannot identify food in the image, return:
 
   let response;
   try {
-    response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+    response = await fetchWithRetry(`${GEMINI_API_URL}?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(requestBody)
