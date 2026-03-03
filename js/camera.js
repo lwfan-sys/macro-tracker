@@ -42,7 +42,7 @@ function readFileAsDataUrl(file) {
   });
 }
 
-function resizeImage(dataUrl, maxSize = 1024) {
+function resizeImage(dataUrl, maxSize = 512) {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
@@ -65,7 +65,7 @@ function resizeImage(dataUrl, maxSize = 1024) {
       canvas.width = width;
       canvas.height = height;
       canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-      resolve(canvas.toDataURL('image/jpeg', 0.8));
+      resolve(canvas.toDataURL('image/jpeg', 0.6));
     };
     img.src = dataUrl;
   });

@@ -4,8 +4,12 @@ const MODELS = [
 ];
 
 async function callWithFallback(apiKey, requestBody) {
+  let lastResponse = null;
+
   for (const model of MODELS) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    let gotRateLimited = false;
+
     for (let attempt = 0; attempt < 3; attempt++) {
       let response;
       try {
@@ -17,16 +21,32 @@ async function callWithFallback(apiKey, requestBody) {
       } catch {
         throw new Error('NETWORK_ERROR');
       }
-      if (response.status === 429 && attempt < 2) {
-        await new Promise(r => setTimeout(r, 3000 * (attempt + 1)));
-        continue;
+
+      lastResponse = response;
+
+      if (response.status === 429) {
+        gotRateLimited = true;
+        if (attempt < 2) {
+          await new Promise(r => setTimeout(r, 3000 * (attempt + 1)));
+          continue;
+        }
+        break; // All retries exhausted for this model, try next
       }
-      if (response.status === 404 || response.status === 400) {
-        break; // Model not available, try next model
+
+      if (response.status === 404) {
+        break; // Model not available, try next
       }
-      return response;
+
+      return response; // Success or other error — return it
+    }
+
+    if (gotRateLimited) {
+      continue; // Try next model
     }
   }
+
+  // If we have a response, return it so caller can handle the error
+  if (lastResponse) return lastResponse;
   throw new Error('RATE_LIMITED');
 }
 
@@ -66,8 +86,11 @@ If you cannot identify food in the image, return:
   const response = await callWithFallback(apiKey, requestBody);
 
   if (!response.ok) {
-    if (response.status === 400 || response.status === 403) throw new Error('INVALID_API_KEY');
+    if (response.status === 403) throw new Error('INVALID_API_KEY');
     if (response.status === 429) throw new Error('RATE_LIMITED');
+    // Log the actual error for debugging
+    const errBody = await response.text().catch(() => '');
+    console.error(`Gemini API error ${response.status}:`, errBody);
     throw new Error(`API_ERROR: ${response.status}`);
   }
 
